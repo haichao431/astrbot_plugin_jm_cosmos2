@@ -1,0 +1,17 @@
+__pycache__/
+.env
+*.pyc
+.pytest_cache/
+
+# 本地备份文件，不入库
+*.bak
+*.bak2
+*.bak3
+*.v3bak_*
+
+# 依赖随插件市场分发，不入库（约 64MB，含 linux 二进制）
+_vendor/
+
+# 运行期缓存
+logo-cache/
+*.log

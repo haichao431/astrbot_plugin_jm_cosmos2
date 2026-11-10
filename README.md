@@ -1,0 +1,505 @@
+<div align="center">
+  <img src="logo.png" alt="AstrBot JM-Cosmos II Plugin Logo" width="160" />
+</div>
+
+# <div align="center">JM-Cosmos II</div>
+
+<div align="center">
+  <strong>全能型 JM 漫画下载与管理工具</strong>
+</div>
+
+<br>
+<div align="center">
+  <a href="CHANGELOG.md"><img src="https://img.shields.io/badge/VERSION-v2.7.6-E91E63?style=for-the-badge" alt="Version"></a>
+  <a href="https://github.com/GEMILUXVII/astrbot_plugin_jm_cosmos/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-AGPL--3.0-009688?style=for-the-badge" alt="License"></a>
+  <a href="https://www.python.org/"><img src="https://img.shields.io/badge/PYTHON-3.10+-3776AB?style=for-the-badge&logo=python&logoColor=white" alt="Python"></a>
+  <a href="https://github.com/AstrBotDevs/AstrBot"><img src="https://img.shields.io/badge/AstrBot-Compatible-00BFA5?style=for-the-badge&logo=robot&logoColor=white" alt="AstrBot Compatible"></a>
+</div>
+
+<div align="center">
+  <a href="https://pypi.org/project/jmcomic/"><img src="https://img.shields.io/badge/JMCOMIC-≥2.7.0-9C27B0?style=for-the-badge" alt="JMComic"></a>
+  <a href="https://github.com/botuniverse/onebot-11"><img src="https://img.shields.io/badge/OneBotv11-AIOCQHTTP-FF5722?style=for-the-badge&logo=qq&logoColor=white" alt="OneBot v11 Support"></a>
+  <a href="https://github.com/GEMILUXVII/astrbot_plugin_jm_cosmos"><img src="https://img.shields.io/badge/UPDATED-2026.06.18-2196F3?style=for-the-badge" alt="Updated"></a>
+</div>
+
+## 介绍
+
+JM-Cosmos II 是一个基于 AstrBot 开发的 JM 漫画下载插件，支持漫画搜索、预览、下载、打包与 QQ 发送。
+
+**v2.0.0 是完全重构的版本**，采用模块化架构设计，代码更清晰、更易维护，并新增了多项实用功能。
+
+> [!CAUTION]
+> **从 v1.x 升级到 v2.x 的用户请注意：**
+> - v2.x 与 v1.x **不兼容**，配置项和命令均有变更
+> - 升级前请**删除旧插件目录**，然后安装新版本
+> - 升级后需在管理面板**重新配置所有选项**
+> - 部分命令已移除（`/jmimg`, `/jmpdf`, `/jmconfig`, `/jmdomain`, `/jmauthor`, `/jmrecommend`）
+
+## 功能特性
+
+### 核心功能
+
+- **漫画搜索** - 通过关键词搜索 JM 漫画，支持按标签/作者/角色/作品搜索
+- **漫画详情** - 查看漫画信息、标签、作者等
+- **本子下载** - 下载完整本子（/jm）或单章节（/jmc），支持实时进度提示
+- **自动打包** - 下载完成后自动打包为 ZIP、PDF 或长图
+- **加密保护** - 支持为 ZIP/PDF 设置密码加密
+- **自动发送** - 打包后自动发送文件到聊天
+
+### 高级功能
+
+- **更新订阅** - 订阅本子，后台检查更新并主动推送，支持增量下载新章节
+- **代理与域名** - 支持 HTTP/SOCKS5 代理，可自定义域名与重试次数
+- **收藏管理** - 查看收藏夹，支持收藏本子
+- **权限控制** - 可选的管理员权限和群组白名单
+- **自动清理** - 发送后自动删除本地文件
+- **自动撤回** - 发送文件后自动撤回消息
+- **封面预览** - 下载前展示漫画封面和详情
+- **错误分类** - 区分本子不存在、网络失败、部分下载失败等情况并给出可读提示
+- **调试模式** - 详细日志输出便于问题排查
+
+## 安装方法
+
+### 1. 下载插件
+
+将插件下载到 AstrBot 的插件目录 `data/plugins/`
+
+### 2. 安装依赖
+
+```bash
+cd data/plugins/jm_cosmos2
+pip install -r requirements.txt
+```
+
+**必须安装的依赖：**
+
+| 依赖              | 用途              |
+| ----------------- | ----------------- |
+| `jmcomic>=2.7.0` | JM 漫画下载核心库 |
+| `pymupdf>=1.23.0` | PDF 打包支持      |
+| `pyzipper>=0.3.6` | 加密 ZIP 支持     |
+
+> [!NOTE]
+> 从 v2.6.8 起，插件在首次安装、依赖尚未就绪时不会因 `jmcomic` 缺失而导入失败；相关功能会在运行时提示依赖未安装。下载、搜索和登录功能仍需要安装 `jmcomic>=2.7.0`。
+
+> [!WARNING]
+> 如果不安装 `pyzipper`，默认可发送 zip 文件，但 ZIP 文件将**无法加密**！
+
+### 3. 重启 AstrBot
+
+确保插件被正确加载。
+
+### 4. 配置插件
+
+在 AstrBot 管理面板的「插件配置」中设置选项。
+
+## 命令列表
+
+### 下载命令
+
+#### `/jm <ID>`
+下载指定 ID 的完整本子。
+
+```
+/jm 123456
+```
+
+- 下载完成后自动打包并发送
+- 若开启 `send_cover_preview`，下载前会显示封面预览
+
+---
+
+#### `/jmc <本子ID> <章节序号>`
+下载指定本子的指定章节。
+
+```
+/jmc 123456 3   # 下载本子 123456 的第 3 章
+```
+
+---
+
+### 搜索与浏览
+
+#### `/jms <关键词> [页码]`
+搜索漫画。支持搜索类型前缀：`tag:`（标签）、`author:`（作者）、`actor:`（登场角色）、`work:`（作品）。
+
+```
+/jms 标签名
+/jms 作者名
+/jms 标签名 2       # 搜索第2页
+/jms tag:全彩       # 按标签搜索
+/jms author:某作者 2 # 按作者搜索第2页
+```
+
+不带前缀时为综合搜索，行为与旧版一致。
+
+---
+
+#### `/jmi <ID>`
+查看本子详情（标题、作者、标签、章节数等）。
+
+```
+/jmi 123456
+```
+
+- 若开启 `send_cover_preview`，会同时显示封面图片
+
+---
+
+#### `/jmrank [类型] [分类] [页码]`
+查看排行榜。参数顺序灵活，智能识别。
+
+| 参数 | 可选值                                                                     | 默认值 |
+| ---- | -------------------------------------------------------------------------- | ------ |
+| 类型 | `day` `week` `month`                                                       | `week` |
+| 分类 | `all` `doujin` `single` `short` `hanman` `meiman` `3d` `cosplay` `another` | `all`  |
+| 页码 | 正整数                                                                     | `1`    |
+
+```
+/jmrank              # 查看周排行榜第1页
+/jmrank week         # 查看周排行榜第1页
+/jmrank month 2      # 查看月排行榜第2页
+/jmrank week hanman  # 查看本周韩漫排行榜
+/jmrank day hanman 2 # 查看今日韩漫排行榜第2页
+```
+
+---
+
+#### `/jmrec [分类] [排序] [时间] [页码]`
+推荐浏览 - 按分类、排序、时间浏览漫画。
+
+| 参数     | 可选值                                                                 | 默认值 |
+| -------- | ---------------------------------------------------------------------- | ------ |
+| 分类     | `all` `doujin` `single` `short` `hanman` `meiman` `3d` `cosplay` `another` | `all`  |
+| 排序     | `hot`(热门) `new`(最新) `pic`(图多) `like`(点赞)                        | `hot`  |
+| 时间     | `day`(今日) `week`(本周) `month`(本月) `all`(全部)                       | `week` |
+| 页码     | 正整数                                                                 | `1`    |
+
+```
+/jmrec                  # 本周全分类热门（默认推荐）
+/jmrec hanman           # 本周韩漫热门
+/jmrec all hot day      # 今日全分类热门
+/jmrec doujin new week  # 本周同人最新
+/jmrec 3d hot month 2   # 本月3D热门第2页
+/jmrec help             # 查看详细帮助
+```
+
+> **提示**：参数顺序灵活，智能识别。例如 `/jmrec 2 hanman` 和 `/jmrec hanman 2` 效果相同。
+
+> [!NOTE]
+> **关于空结果的说明**
+> 
+> 某些分类在特定时间范围内可能没有内容（如 `hanman hot day` 可能返回空），这是因为 JM 网站本身在该时间段内没有更新相关内容，并非插件 Bug。遇到这种情况时，建议尝试扩大时间范围（如 `week` 或 `month`）。
+
+---
+
+### 账号功能
+
+#### `/jmlogin <用户名> <密码>`
+登录 JM 账号。**仅限私聊**，在群聊中会被拒绝以避免账号密码泄露。
+
+```
+/jmlogin myuser mypassword
+```
+
+> [!WARNING]
+> 请勿在群聊发送账号密码。群聊中该命令会被拒绝；建议直接在管理面板配置账号密码实现自动登录。
+
+---
+
+#### `/jmlogout`
+登出当前账号。
+
+```
+/jmlogout
+```
+
+---
+
+#### `/jmstatus`
+查看当前登录状态。
+
+```
+/jmstatus
+```
+
+---
+
+#### `/jmfav [页码] [收藏夹ID]` · `/jmfav add <本子ID>`
+查看我的收藏，或将本子加入收藏夹（需要先登录）。
+
+| 参数       | 说明                     | 默认值       |
+| ---------- | ------------------------ | ------------ |
+| 页码       | 收藏列表页码             | `1`          |
+| 收藏夹ID   | 指定收藏夹，`0` 表示全部 | `0`          |
+
+```
+/jmfav               # 查看全部收藏第1页
+/jmfav 2             # 查看全部收藏第2页
+/jmfav 1 12345       # 查看收藏夹ID为12345的第1页
+/jmfav add 123456    # 收藏本子 123456
+```
+
+---
+
+### 订阅功能
+
+#### `/jmsub <ID>`
+订阅本子更新。后台会定期检查该本子是否有新章节，发现更新时在当前会话推送提醒。
+
+```
+/jmsub 123456
+```
+
+---
+
+#### `/jmunsub <ID>`
+取消订阅。
+
+```
+/jmunsub 123456
+```
+
+---
+
+#### `/jmsublist`
+查看当前会话的订阅列表（含已记录章节数）。
+
+```
+/jmsublist
+```
+
+---
+
+#### `/jmupdate <ID>`
+增量下载：仅下载已订阅记录之后的新增章节并打包发送。未订阅时等同于下载全部章节。
+
+```
+/jmupdate 123456
+```
+
+> [!NOTE]
+> 后台检查间隔由 `subscribe_check_interval` 配置（秒，默认 3600，设为 `0` 关闭后台检查）。主动推送依赖平台支持，`qq_official` 等平台可能不支持。
+
+---
+
+### 帮助
+
+#### `/jmhelp`
+显示帮助信息。
+
+```
+/jmhelp
+```
+
+## 配置说明
+
+所有配置可在 AstrBot 管理面板中修改：
+
+| 配置项                   | 说明                       | 默认值         | 备注 |
+| ------------------------ | -------------------------- | -------------- | ---- |
+| `download_dir`           | 漫画下载目录               | `./downloads`  |  |
+| `image_suffix`           | 图片格式 (.jpg/.png/.webp) | `.jpg`         | webp 仅支持 ZIP 打包 |
+| `client_type`            | 客户端类型 (api/html)      | `api`          | api 兼容性好，html 效率高但限 IP |
+| `client_domain`          | 自定义域名列表             | 空             | 逗号分隔，留空自动选择；默认域名被墙时手动指定 |
+| `retry_times`            | 请求重试次数               | `0`            | 0=使用 jmcomic 默认值(5) |
+| `use_proxy`              | 是否使用代理               | `false`        |  |
+| `proxy_url`              | 代理服务器地址             | 空             | 格式: `http://host:port` |
+| `max_concurrent_photos`  | 最大并发章节数             | `3`            | 建议 3-5 |
+| `max_concurrent_images`  | 最大并发图片数             | `5`            | 建议 5-10 |
+| `pack_format`            | 打包格式 (zip/pdf/long_img/none) | `zip`    | long_img 为纵向长图(过长分段打包 zip)；none 为不打包、仅本地保存不发送 |
+| `pack_password`          | 打包密码                   | 空             | **强烈建议设置，可降低风控** |
+| `filename_show_password` | 文件名显示密码提示         | `false`        | 开启后文件名末尾添加 #PWxxx |
+| `auto_delete_after_send` | 发送后自动删除             | `true`         |  |
+| `send_cover_preview`     | 发送封面预览               | `true`         |  |
+| `show_download_progress` | 发送下载进度               | `true`         | 按 25% 步进推送，关闭可减少刷屏 |
+| `cover_recall_enabled`   | 封面消息自动撤回           | `false`        | 仅支持 QQ/NapCat 平台 |
+| `auto_recall_enabled`    | 文件消息自动撤回           | `false`        | 仅支持 QQ/NapCat 平台 |
+| `auto_recall_delay`      | 撤回延迟 (秒)              | `60`           | 建议 30-120 |
+| `enabled_groups`         | 启用的群列表               | 空             | 逗号分隔，空=全部启用 |
+| `admin_only`             | 仅管理员可用               | `false`        |  |
+| `admin_list`             | 管理员 ID 列表             | 空             | 逗号分隔，不受下载限制 |
+| `jm_username`            | JM账号用户名               | 空             | 面板配置可自动登录 |
+| `jm_password`            | JM账号密码                 | 空             | 命令登录重启后失效 |
+| `search_page_size`       | 搜索结果数量               | `5`            |  |
+| `daily_download_limit`   | 每日下载限制               | `0`            | 0=不限，管理员豁免 |
+| `subscribe_check_interval` | 订阅检查间隔 (秒)        | `3600`         | 后台检查订阅更新间隔，0=关闭 |
+| `debug_mode`             | 调试模式                   | `false`        |  |
+
+## 文件结构
+
+```
+astrbot_plugin_jm_cosmos/
+├── main.py              # 插件入口和命令注册
+├── metadata.yaml        # 插件元数据
+├── _conf_schema.json    # 配置模式定义
+├── requirements.txt     # 依赖库列表
+├── core/                # 核心模块
+│   ├── __init__.py
+│   ├── auth.py          # 认证管理器
+│   ├── browser.py       # 浏览查询器（搜索、排行、详情、收藏）
+│   ├── constants.py     # 常量定义
+│   ├── downloader.py    # 下载管理器（含进度与增量下载）
+│   ├── errors.py        # jmcomic 异常分类
+│   ├── jmcomic_loader.py # jmcomic 可选依赖加载
+│   ├── packer.py        # 打包模块 (ZIP/PDF/长图)
+│   ├── quota.py         # 下载配额管理器
+│   ├── subscribe.py     # 订阅管理器
+│   └── base/            # 基础模块
+│       ├── client.py    # 客户端混入类
+│       └── config.py    # 配置管理器
+└── utils/               # 工具模块
+    ├── __init__.py
+    ├── filename.py      # 文件名生成器
+    ├── formatter.py     # 消息格式化器
+    └── recall.py        # 消息撤回工具
+```
+
+## 常见问题
+
+### Q: ZIP 文件没有加密？
+
+**A:** 请确保已安装 `pyzipper` 库：
+
+```bash
+pip install pyzipper
+```
+
+### Q: 下载失败，提示 "not found client impl class"？
+
+**A:** 请检查「客户端类型」配置，应为 `api` 或 `html`，不能是其他值。
+
+### Q: 403 错误或 IP 被禁止访问？
+
+**A:** 启用代理功能并配置代理地址：
+
+```
+use_proxy: true
+proxy_url: http://127.0.0.1:7890
+```
+
+### Q: 如何只允许特定群使用？
+
+**A:** 在「启用的群列表」中填写群号（逗号分隔），如：`123456789,987654321`
+
+### Q: Docker 部署时文件发送失败？
+
+> [!IMPORTANT]
+> **AstrBot 和 NapCat 分离部署时，必须配置共享卷才能发送文件！**
+
+当 AstrBot 和 NapCat（或其他 OneBot 实现）部署在不同 Docker 容器中时，可能会遇到以下错误：
+
+- `识别URL失败, uri= /AstrBot/data/plugin_data/jm_cosmos2/downloads/...`
+- `文件消息缺少参数`
+
+**原因**：两个容器的文件系统是隔离的，NapCat 无法访问 AstrBot 容器内的文件。
+
+**解决方案**：在 NapCat 的 `docker-compose.yml` 中添加 volume 映射，使其能访问 AstrBot 的数据目录：
+
+```yaml
+    volumes:
+      - ./ntqq:/app/.config/QQ
+      - ./napcat/config:/app/napcat/config
+      - /root/AstrBot/data:/AstrBot/data 
+      # 映射 AstrBot 数据目录，使 NapCat 可以访问下载的文件
+```
+
+> [!NOTE]
+> 将 `/root/AstrBot/data` 替换为您服务器上 AstrBot 数据目录的实际路径。
+
+> [!TIP]
+> 修改后需要重建容器：`docker-compose down && docker-compose up -d`
+
+### Q: 文件发送失败，提示 "rich media transfer failed"？
+
+**A:** 这通常是 QQ 账号被风控导致的，而非插件或路径问题。
+
+**错误示例（NapCat 日志）：**
+
+```
+[error] USERNAME | 发生错误 Error: EventChecker Failed: ...
+{
+    "result": -1,
+    "errMsg": "rich media transfer failed"
+}
+```
+
+**可能原因：**
+- QQ 检测到敏感内容并限制了文件发送功能
+- 账号因频繁发送文件被临时限制
+
+**解决方案：**
+1. 尝试重启 NapCat：`docker restart napcat`
+2. 等待一段时间（几小时到几天）后风控可能自动解除
+3. 换用其他 QQ 账号
+4. **强烈建议**：开启 `pack_password` 加密功能，可有效降低触发风控的概率
+
+## 更新日志
+
+查看完整更新日志：[CHANGELOG.md](./CHANGELOG.md)
+
+**当前版本：v2.7.6** - 修复 NapCat 超时(retcode 1200)下封面/文件被重复发送
+
+## 注意事项
+
+- 本插件仅供学习交流使用
+- 请勿将下载的内容用于商业用途
+- 大量请求可能导致 IP 被封禁
+- 请遵守当地法律法规
+
+## 贡献指南
+
+欢迎提交 Pull Request 和 Issue。提交代码时请遵循以下提交消息规范：
+
+### 提交类型
+
+| 类型       | 说明                                     |
+| ---------- | ---------------------------------------- |
+| `feat`     | 新功能                                   |
+| `fix`      | Bug 修复                                 |
+| `docs`     | 文档变更                                 |
+| `style`    | 代码格式调整（空格、分号等，不影响逻辑） |
+| `refactor` | 代码重构（既非新功能也非 Bug 修复）      |
+| `perf`     | 性能优化                                 |
+| `test`     | 添加或修正测试                           |
+| `chore`    | 构建过程或辅助工具的变动                 |
+| `revert`   | 回滚提交                                 |
+| `ci`       | CI/CD 相关变更                           |
+| `build`    | 构建系统变更                             |
+
+### 提交格式
+
+```
+<类型>: <简短描述>
+
+[可选的详细描述]
+```
+
+示例：
+
+```
+feat: 新增加密 ZIP 打包功能
+fix: 修复客户端类型配置错误
+docs: 更新 README 安装说明
+```
+
+## 许可证
+
+[![](https://www.gnu.org/graphics/agplv3-155x51.png "AGPL v3 logo")](https://www.gnu.org/licenses/agpl-3.0.txt)
+
+Copyright (C) 2025-2026 GEMILUXVII
+
+This program is free software: you can redistribute it and/or modify it under the terms of the GNU Affero General Public License as published by the Free Software Foundation, either version 3 of the License, or any later version.
+
+This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU Affero General Public License for more details.
+
+You should have received a copy of the GNU Affero General Public License along with this program. If not, see <https://www.gnu.org/licenses/>.
+
+## 致谢
+
+本项目基于或参考了以下开源项目:
+
+- [AstrBot](https://github.com/AstrBotDevs/AstrBot) - 机器人框架
+- [JMComic-Crawler-Python](https://github.com/hect0x7/JMComic-Crawler-Python) - JMComic 库
+- [pyzipper](https://github.com/danifus/pyzipper) - 加密 ZIP 库
+- [pymupdf](https://pymupdf.readthedocs.io/) - PDF 处理库

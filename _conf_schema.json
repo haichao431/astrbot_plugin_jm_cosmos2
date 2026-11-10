@@ -1,0 +1,243 @@
+{
+  "download_dir": {
+    "type": "string",
+    "description": "漫画下载目录",
+    "hint": "下载的漫画将保存到此目录，可使用相对路径或绝对路径",
+    "default": "./downloads"
+  },
+  "image_suffix": {
+    "type": "string",
+    "description": "图片格式",
+    "hint": "下载图片的格式转换",
+    "default": ".jpg",
+    "options": [
+      ".jpg",
+      ".png",
+      ".webp"
+    ]
+  },
+  "client_type": {
+    "type": "string",
+    "description": "客户端类型",
+    "hint": "api模式使用移动端API兼容性好，html模式使用网页端效率高但限制IP地区",
+    "default": "api",
+    "options": [
+      "api",
+      "html"
+    ]
+  },
+  "client_domain": {
+    "type": "string",
+    "description": "自定义域名列表",
+    "hint": "逗号分隔的 JM 域名，留空则由 jmcomic 自动选择；当默认域名被墙时可手动指定，如 18comic.vip,18comic.org",
+    "default": ""
+  },
+  "retry_times": {
+    "type": "int",
+    "description": "请求重试次数",
+    "hint": "网络请求失败时的重试次数，0 表示使用 jmcomic 默认值(5)",
+    "default": 0
+  },
+  "use_proxy": {
+    "type": "bool",
+    "description": "是否使用代理",
+    "hint": "某些地区可能需要代理才能访问JM网站",
+    "default": false
+  },
+  "proxy_url": {
+    "type": "string",
+    "description": "代理服务器地址",
+    "hint": "格式: http://host:port 或 socks5://host:port",
+    "default": ""
+  },
+  "max_concurrent_photos": {
+    "type": "int",
+    "description": "最大并发章节数",
+    "hint": "同时下载的章节数量，建议3-5",
+    "default": 3
+  },
+  "max_concurrent_images": {
+    "type": "int",
+    "description": "最大并发图片数",
+    "hint": "每个章节同时下载的图片数量，建议5-10",
+    "default": 5
+  },
+  "pack_format": {
+    "type": "string",
+    "description": "打包格式",
+    "hint": "下载完成后的打包格式。long_img 为纵向拼接长图(过长自动分段并打包为zip)；none 为不打包、仅本地保存不发送",
+    "default": "zip",
+    "options": [
+      "zip",
+      "pdf",
+      "long_img",
+      "none"
+    ]
+  },
+  "pack_password": {
+    "type": "string",
+    "description": "打包密码",
+    "hint": "为ZIP或PDF设置密码，留空则不加密",
+    "default": ""
+  },
+  "filename_show_password": {
+    "type": "bool",
+    "description": "文件名显示密码",
+    "hint": "开启后在文件名末尾添加 #PWxxx 提示（仅当设置了密码时生效）。注意：会把打包密码暴露在文件名/聊天记录/日志中，请谨慎开启",
+    "default": false
+  },
+  "auto_delete_after_send": {
+    "type": "bool",
+    "description": "发送后自动删除",
+    "hint": "发送文件后是否自动删除本地文件以节省空间",
+    "default": true
+  },
+  "send_cover_preview": {
+    "type": "bool",
+    "description": "发送封面预览",
+    "hint": "下载前是否发送漫画封面图片预览",
+    "default": true
+  },
+  "show_download_progress": {
+    "type": "bool",
+    "description": "发送下载进度",
+    "hint": "下载本子时按 25% 步进推送进度消息，关闭可减少消息刷屏",
+    "default": true
+  },
+  "cover_recall_enabled": {
+    "type": "bool",
+    "description": "封面消息自动撤回",
+    "hint": "开启后封面预览消息会自动撤回（仅支持 QQ/NapCat 平台）",
+    "default": false
+  },
+  "auto_recall_enabled": {
+    "type": "bool",
+    "description": "文件消息自动撤回",
+    "hint": "发送文件后自动撤回（仅支持 QQ/NapCat 平台）",
+    "default": false
+  },
+  "auto_recall_delay": {
+    "type": "int",
+    "description": "撤回延迟（秒）",
+    "hint": "发送后多少秒自动撤回，建议30-120",
+    "default": 60
+  },
+  "enabled_groups": {
+    "type": "string",
+    "description": "启用的群列表",
+    "hint": "以逗号分隔的群号列表，留空则所有群都启用",
+    "default": ""
+  },
+  "admin_only": {
+    "type": "bool",
+    "description": "仅管理员可用",
+    "hint": "开启后只有管理员列表中的用户才能使用插件",
+    "default": false
+  },
+  "admin_list": {
+    "type": "string",
+    "description": "管理员用户ID列表",
+    "hint": "以逗号分隔的用户ID列表，这些用户拥有管理员权限",
+    "default": ""
+  },
+  "jm_username": {
+    "type": "string",
+    "description": "JM账号用户名",
+    "hint": "填写后可自动登录，解锁收藏夹等功能（可选）",
+    "default": ""
+  },
+  "jm_password": {
+    "type": "string",
+    "description": "JM账号密码",
+    "hint": "配合用户名使用，支持自动登录（可选）",
+    "default": ""
+  },
+  "search_page_size": {
+    "type": "int",
+    "description": "搜索结果每页数量",
+    "hint": "每次搜索返回的结果数量",
+    "default": 5
+  },
+  "daily_download_limit": {
+    "type": "int",
+    "description": "每日下载次数限制",
+    "hint": "每个用户每天最多下载次数，0 表示不限制。注意：配额数据库异常时会降级放行(fail-open)",
+    "default": 0
+  },
+  "subscribe_check_interval": {
+    "type": "int",
+    "description": "订阅检查间隔（秒）",
+    "hint": "后台检查订阅本子更新的间隔秒数，建议>=1800，0 表示关闭后台检查(从0改为非0需重载插件生效)",
+    "default": 3600
+  },
+  "debug_mode": {
+    "type": "bool",
+    "description": "调试模式",
+    "hint": "开启后会输出详细的调试日志",
+    "default": false
+  },
+  "cloud_send_mode": {
+    "type": "string",
+    "description": "发送方式",
+    "hint": "「发送群文件」= 下载完直接把文件发到群里，不上传网盘；「发送网盘链接」= 上传网盘并生成分享链接发到群里，不再发文件。两个网盘可同时启用，也可只启用一个",
+    "default": "发送群文件",
+    "options": [
+      "发送群文件",
+      "发送网盘链接"
+    ]
+  },
+  "cloud_115_enabled": {
+    "type": "bool",
+    "description": "启用 115 网盘",
+    "hint": "开启后文件会同时上传到 115。Cookie 可在群里发 /jm115login 扫码自动获取并写入",
+    "default": false
+  },
+  "cloud_115_cookie": {
+    "type": "string",
+    "description": "115 Cookie",
+    "hint": "可留空：在群里发送 /jm115login，用 115 App 扫码后会自动填入这里",
+    "default": ""
+  },
+  "cloud_115_dir": {
+    "type": "string",
+    "description": "115 上传目录",
+    "hint": "如 /comic；留空表示根目录，支持目录路径或目录 ID",
+    "default": ""
+  },
+  "cloud_quark_enabled": {
+    "type": "bool",
+    "description": "启用夸克网盘",
+    "hint": "开启后文件会同时上传到夸克。Cookie 可在群里发 /jmquarklogin 扫码自动获取并写入",
+    "default": false
+  },
+  "cloud_quark_cookie": {
+    "type": "string",
+    "description": "夸克 Cookie",
+    "hint": "可留空：在群里发送 /jmquarklogin，用夸克 App 扫码后会自动填入这里",
+    "default": ""
+  },
+  "cloud_quark_dir": {
+    "type": "string",
+    "description": "夸克上传目录",
+    "hint": "如 /comic；留空表示根目录，支持多级路径（不存在会自动创建）",
+    "default": ""
+  },
+  "cloud_share_passcode": {
+    "type": "string",
+    "description": "分享提取码",
+    "hint": "115/夸克 分享链接的提取码，建议 4 位字母数字；留空则每次自动生成 4 位随机码",
+    "default": ""
+  },
+  "cloud_upload_delete_local": {
+    "type": "bool",
+    "description": "分享成功后删除本地文件",
+    "hint": "仅在发送网盘链接模式且分享成功时生效；上传或分享失败会保留本地文件",
+    "default": true
+  },
+  "cloud_upload_timeout": {
+    "type": "int",
+    "description": "上传超时（秒）",
+    "hint": "单个文件上传的超时时间，大文件建议 300-1800",
+    "default": 300
+  }
+}
