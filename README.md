@@ -2,6 +2,17 @@
   <img src="logo.png" alt="AstrBot JM-Cosmos II Plugin Logo" width="160" />
 </div>
 
+> **这是修改版（基于上游 v2.7.6）**
+>
+> 上游项目：[GEMILUXVII/astrbot_plugin_jm_cosmos](https://github.com/GEMILUXVII/astrbot_plugin_jm_cosmos)
+>
+> 相对上游的主要改动：115 / 夸克**双网盘并发上传**、**永久带提取码的分享链接**、
+> 「发送群文件 / 发送网盘链接」开关、**扫码登录**命令 `/jm115login` `/jmquarklogin`。
+>
+> 完整改动说明见 **[MODIFICATIONS.md](MODIFICATIONS.md)**。
+>
+> 本修改版同样遵循上游的 **AGPL-3.0** 许可证，见 [LICENSE](LICENSE)。
+
 # <div align="center">JM-Cosmos II</div>
 
 <div align="center">
