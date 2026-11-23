@@ -125,6 +125,42 @@
 
 `format_help()` 新增「网盘命令」分组，并补充发送方式的说明。
 
+### 修改 `core/packer.py`
+
+`JMPacker.cleanup(path)` 增加**危险路径保护**与**失败日志**：
+
+- 拒绝删除空路径 `Path()`（等价于 `.`）、当前工作目录、文件系统根目录
+- 删除失败不再静默 `return False`，改为 `logger.warning` 记录异常
+
+> 原实现里 `cleanup(Path())` 会对 `"."` 执行 `shutil.rmtree`，
+> 而下载失败时 `result.save_path` 恰好是 `Path()`，存在误删工作目录的风险。
+
+### 修复：打包失败时本地下载目录未清理
+
+`_emit_packed_file()` 的「没产出打包文件」分支原来是：
+
+```python
+if not has_file:
+    yield event.plain_result(result_msg)
+    return          # ← 直接返回，下载的图片目录留在磁盘上
+```
+
+`has_file` 为假的条件是 `pack_result.success` 为假、`output_path` 为空、或 `format == "none"`。
+一旦命中，`downloads/<专辑ID>/` 下已经下载的全部章节图片都不会被删除。
+
+现在该分支同样遵守 `auto_delete_after_send`：
+
+```python
+if not has_file:
+    yield event.plain_result(result_msg)
+    if self.config_manager.auto_delete_after_send:
+        JMPacker.cleanup(result.save_path)
+    return
+```
+
+**实际影响**：本机曾因此堆积 4.1 GB（专辑 `1100551`，100 章 4747 张图，
+打包未产出文件而走到早退分支，下载目录一直没被清理）。
+
 ---
 
 ## 兼容性说明

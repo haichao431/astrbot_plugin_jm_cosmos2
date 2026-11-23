@@ -1626,6 +1626,10 @@ class JMCosmosPlugin(Star):
 
         if not has_file:
             yield event.plain_result(result_msg)
+            # 打包没产出文件（pack_result 失败/format=none）时也要清理，
+            # 否则已经下载到本地的图片目录会一直堆在磁盘上。
+            if self.config_manager.auto_delete_after_send:
+                JMPacker.cleanup(result.save_path)
             return
 
         from astrbot.api.event import MessageChain

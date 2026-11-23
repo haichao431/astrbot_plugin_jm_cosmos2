@@ -9,6 +9,13 @@ from dataclasses import dataclass
 from pathlib import Path
 
 try:
+    from astrbot.api import logger
+except ImportError:  # 允许脱离 AstrBot 环境单独运行/测试
+    import logging
+
+    logger = logging.getLogger(__name__)
+
+try:
     import pyzipper
 
     PYZIPPER_AVAILABLE = True
@@ -423,12 +430,29 @@ class JMPacker:
 
         Returns:
             是否成功删除
+
+        安全约束：拒绝空路径、当前工作目录和文件系统根目录。
+        下载失败时 result.save_path 可能是 Path()，等价于 "."，
+        若无此保护，shutil.rmtree(".") 会删掉整个工作目录。
         """
         try:
-            if path.is_dir():
-                shutil.rmtree(path)
-            elif path.is_file():
-                path.unlink()
+            p = Path(path)
+            raw = str(p).strip()
+            if not raw or raw in (".", "./", "/"):
+                logger.warning(f"cleanup 拒绝删除危险路径: {raw!r}")
+                return False
+            try:
+                resolved = p.resolve()
+            except OSError:
+                resolved = p
+            if resolved in (Path.cwd().resolve(), Path(resolved.anchor)):
+                logger.warning(f"cleanup 拒绝删除危险路径: {resolved}")
+                return False
+            if p.is_dir():
+                shutil.rmtree(p)
+            elif p.is_file():
+                p.unlink()
             return True
-        except Exception:
+        except Exception as e:
+            logger.warning(f"cleanup 删除 {path} 失败: {e}")
             return False
