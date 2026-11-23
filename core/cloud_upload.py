@@ -29,6 +29,9 @@ from typing import Any
 
 _VENDOR_DIR = Path(__file__).resolve().parent.parent / "_vendor"
 
+# 夸克接口全部强制走 IPv4 并对网络抖动重试，原因见 core/net.py 顶部说明
+from .net import build_client, with_retry  # noqa: E402
+
 
 @dataclass
 class CloudUploadResult:
@@ -550,12 +553,21 @@ class CloudUploader:
         if params:
             query.update(params)
 
-        with self._httpx.Client(timeout=self.timeout) as client:
+        with build_client(self._httpx, timeout=self.timeout) as client:
             if method.upper() == "GET":
-                resp = client.get(url, params=query, headers=self._quark_headers())
+                resp = with_retry(
+                    lambda: client.get(
+                        url, params=query, headers=self._quark_headers()
+                    )
+                )
             else:
-                resp = client.post(
-                    url, json=json_body or {}, params=query, headers=self._quark_headers()
+                resp = with_retry(
+                    lambda: client.post(
+                        url,
+                        json=json_body or {},
+                        params=query,
+                        headers=self._quark_headers(),
+                    )
                 )
 
         if resp.status_code >= 400:
@@ -656,8 +668,10 @@ class CloudUploader:
         return {"upload_url": url, "headers": hdrs}
 
     def _quark_put_part(self, upload_url, headers, data):
-        with self._httpx.Client(timeout=self.timeout) as client:
-            resp = client.put(upload_url, content=data, headers=headers)
+        with build_client(self._httpx, timeout=self.timeout) as client:
+            resp = with_retry(
+                lambda: client.put(upload_url, content=data, headers=headers)
+            )
         if resp.status_code != 200:
             raise CloudUploadError(f"夸克 OSS 上传失败 HTTP {resp.status_code}: {resp.text[:200]}")
         etag = (resp.headers.get("etag") or "").strip('"')
@@ -671,8 +685,10 @@ class CloudUploader:
         etag = self._quark_put_part(auth["upload_url"], auth["headers"], buffer)
         xml = '<?xml version="1.0" encoding="UTF-8"?>\n<CompleteMultipartUpload>\n<Part>\n<PartNumber>1</PartNumber>\n<ETag>"' + etag + '"</ETag>\n</Part>\n</CompleteMultipartUpload>'
         pa = self._quark_auth_complete(task_id, auth_info, upload_id, obj_key, bucket, xml, callback_info)
-        with self._httpx.Client(timeout=self.timeout) as client:
-            resp = client.post(pa["upload_url"], content=xml, headers=pa["headers"])
+        with build_client(self._httpx, timeout=self.timeout) as client:
+            resp = with_retry(
+                lambda: client.post(pa["upload_url"], content=xml, headers=pa["headers"])
+            )
         if resp.status_code not in (200, 203):
             raise CloudUploadError(f"夸克 OSS 合并失败 HTTP {resp.status_code}: {resp.text[:200]}")
 
@@ -695,8 +711,10 @@ class CloudUploader:
         xml_parts = "\n".join(f"<Part>\n<PartNumber>{n}</PartNumber>\n<ETag>\"{e}\"</ETag>\n</Part>" for n, e in uploaded)
         xml = f'<?xml version="1.0" encoding="UTF-8"?>\n<CompleteMultipartUpload>\n{xml_parts}\n</CompleteMultipartUpload>'
         pa = self._quark_auth_complete(task_id, auth_info, upload_id, obj_key, bucket, xml, callback_info)
-        with self._httpx.Client(timeout=self.timeout) as client:
-            resp = client.post(pa["upload_url"], content=xml, headers=pa["headers"])
+        with build_client(self._httpx, timeout=self.timeout) as client:
+            resp = with_retry(
+                lambda: client.post(pa["upload_url"], content=xml, headers=pa["headers"])
+            )
         if resp.status_code not in (200, 203):
             raise CloudUploadError(f"夸克 OSS 合并失败 HTTP {resp.status_code}: {resp.text[:200]}")
 

@@ -18,6 +18,8 @@ import uuid
 from pathlib import Path
 from urllib.parse import urlencode
 
+from .net import build_client, with_retry
+
 _VENDOR_DIR = Path(__file__).resolve().parent.parent / "_vendor"
 
 
@@ -147,9 +149,10 @@ class QRLoginQuark:
         self.timeout = timeout
         self._token: str = ""
         self._service_ticket: str = ""
-        self._client = httpx.Client(
-            timeout=20.0,
-            follow_redirects=True,
+        # 强制 IPv4 + 45 秒超时：服务器无公网 IPv6，且跨国链路握手常超过 20 秒
+        self._client = build_client(
+            httpx,
+            timeout=45.0,
             headers={
                 "user-agent": (
                     "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
@@ -171,14 +174,16 @@ class QRLoginQuark:
     def start(self) -> str:
         """获取二维码 token，返回二维码内容字符串"""
         request_id = str(uuid.uuid4())
+        params = {
+            "client_id": self.CLIENT_ID,
+            "v": "1.2",
+            "request_id": request_id,
+        }
         try:
-            resp = self._client.get(
-                self.TOKEN_API,
-                params={
-                    "client_id": self.CLIENT_ID,
-                    "v": "1.2",
-                    "request_id": request_id,
-                },
+            resp = with_retry(
+                lambda: self._client.get(self.TOKEN_API, params=params),
+                attempts=4,
+                delay=1.0,
             )
             payload = resp.json()
         except Exception as e:  # noqa: BLE001
@@ -212,14 +217,18 @@ class QRLoginQuark:
             raise QRLoginError("尚未调用 start()")
 
         try:
-            resp = self._client.get(
-                self.TICKET_API,
-                params={
-                    "client_id": self.CLIENT_ID,
-                    "v": "1.2",
-                    "token": self._token,
-                    "request_id": str(uuid.uuid4()),
-                },
+            resp = with_retry(
+                lambda: self._client.get(
+                    self.TICKET_API,
+                    params={
+                        "client_id": self.CLIENT_ID,
+                        "v": "1.2",
+                        "token": self._token,
+                        "request_id": str(uuid.uuid4()),
+                    },
+                ),
+                attempts=2,
+                delay=1.0,
             )
             payload = resp.json()
         except Exception:
@@ -247,9 +256,11 @@ class QRLoginQuark:
             raise QRLoginError("尚未完成扫码确认")
 
         try:
-            self._client.get(
-                self.USER_API,
-                params={"st": self._service_ticket, "lw": "scan"},
+            with_retry(
+                lambda: self._client.get(
+                    self.USER_API,
+                    params={"st": self._service_ticket, "lw": "scan"},
+                )
             )
         except Exception as e:  # noqa: BLE001
             raise QRLoginError(f"夸克获取账号信息失败: {e}") from e
@@ -268,16 +279,20 @@ class QRLoginQuark:
     def verify(self, cookie: str) -> str:
         """验证 Cookie 是否可用，返回昵称（失败抛异常）"""
         try:
-            resp = self._httpx.get(
-                "https://pan.quark.cn/1/clouddrive/member",
-                params={"pr": "ucpro", "fr": "pc"},
-                headers={
-                    "cookie": cookie,
-                    "user-agent": "Mozilla/5.0",
-                    "accept": "application/json",
-                },
-                timeout=20.0,
-            )
+            with build_client(self._httpx, timeout=30.0) as client:
+                resp = with_retry(
+                    lambda: client.get(
+                        "https://pan.quark.cn/1/clouddrive/member",
+                        params={"pr": "ucpro", "fr": "pc"},
+                        headers={
+                            "cookie": cookie,
+                            "user-agent": "Mozilla/5.0",
+                            "accept": "application/json",
+                        },
+                    ),
+                    attempts=2,
+                    delay=1.0,
+                )
             data = (resp.json() or {}).get("data") or {}
         except Exception as e:  # noqa: BLE001
             raise QRLoginError(f"夸克 Cookie 验证失败: {e}") from e
